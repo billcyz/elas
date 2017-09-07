@@ -11,15 +11,22 @@
 %% -----------------------------------------------------------------
 
 %% Start server
-start() ->
-	elas_server:start_link().
+start(Port) when is_port(Port) ->
+	
+	
+%% 	case elas_server:start_link(Port) of
+%% 		{ok, _Pid} -> {ok, started};
+%% 		E -> E
+%% 	end.
 
 
 %% Stop server
 stop() ->
-	1.
+	elas_server:stop(),
+	ok.
 
-%% Import dataset
-import_dataset() ->
-	1.
-
+%% %% Import dataset
+%% import_dataset() ->
+%% 	1.
+%% 
+%% %% Return url
