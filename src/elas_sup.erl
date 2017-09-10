@@ -28,4 +28,3 @@ init([]) ->
 
 %% memory management supervisor
 
-%% UI supervisor
