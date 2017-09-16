@@ -23,6 +23,12 @@ start_link() ->
 init([]) ->
     {ok, #state{}}.
 
+%% Define response content for request
+%% Use ProjectId to lock on RequestUrl target (find in memory management)
+%% Response can be plaintext input or input file (dataset)
+define_responese(ProjectId, RequestUrl, Response) ->
+	1.
+
 %% Respond user url request
 respond_request(Url, HttpAction, Option) ->
 	gen_server:call(?SERVER, , _).
