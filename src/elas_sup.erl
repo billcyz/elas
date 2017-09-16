@@ -18,7 +18,6 @@ stat_link() ->
 init([]) ->
 	{ok, [{one_for_one, 0, 5}]}.
 
-1.
 
 %% socket supervisor (optional) -> for remote connection
 
