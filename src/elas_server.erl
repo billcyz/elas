@@ -3,6 +3,7 @@
 
 
 %% Main server of ELAS
+%% Standalone server, which is able to run at anytime, anywhere without any dependency
 
 -module(elas_server).
 -behaviour(gen_server).
