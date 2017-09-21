@@ -24,4 +24,20 @@ start_link() ->
 init([]) ->
 	{ok, #state{}}.
 
+%% Add local component (parser, user_script, etc)
+-spec add_component(atom(), list()) -> 'ok'.
+add_component(CompName, MFA) ->
+	[Module, Func, Args] = MFA,
+	case elas_sup:start_child_sup(
+		   CompName, {Module, Func, Args}) of %% Add child supervisor
+		{ok, _Pid} -> ok;
+		E -> E
+	end.
+
+%% Add remote component..
+add_remoteComponent(NodeName, CompName, MFA) ->
+	[Module, Func, Args] = MFA,
+	ok.
+
+
 
