@@ -20,7 +20,7 @@
 
 %% Start server
 start(Port) when is_port(Port) ->
-	
+	ok.
 	
 %% 	case elas_server:start_link(Port) of
 %% 		{ok, _Pid} -> {ok, started};
@@ -38,3 +38,18 @@ stop() ->
 %% 	1.
 %% 
 %% %% Return url
+
+
+%% Connect remote node or url
+-spec try_connect('node' | 'url', atom()) -> any().
+try_connect(Type, ConDst) when is_atom(ConDst) ->
+	case Type of
+		node -> 
+			R = elas_network:connect_remoteNode(ConDst);
+		url -> 
+			R = elas_http:connect_url(ConDst);
+		_ -> R = invalid_connect_type
+	end,
+	R.
+
+

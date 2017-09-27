@@ -37,7 +37,12 @@ add_component(CompName, MFA) ->
 %% Add remote component..
 add_remoteComponent(NodeName, CompName, MFA) ->
 	[Module, Func, Args] = MFA,
-	ok.
+	case elas:try_connect(NodeName) of
+		ok ->
+			elas_sup:start_child_sup(
+			  CompName, {Module, Func, Args});
+		E -> E
+	end.
 
 
 
