@@ -12,7 +12,7 @@
 check_dataset_types(File) -> 1.
 
 
-%% Parse input dataset
+%% Parse input dataset (file)
 get_input(File) ->
 	{ok, IoD} = file:open(File, [read]),
 	1.
