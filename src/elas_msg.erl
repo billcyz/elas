@@ -1,5 +1,4 @@
-%% MagicBlock
-%% Data: 22/09/2017
+
 
 %% --- Code Description ---
 %% Message processor
