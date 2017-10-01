@@ -5,11 +5,28 @@
 
 -module(elas_network).
 -behaviour(gen_server).
--export([]).
+-export([start_link/1,
+		 parse_node/2]).
+
+-export([init/1]).
+
+-define(SERVER, elas_networkSrv).
+
+-record(status, {}).
 
 %% -----------------------------------------------------------------
 
+%% Start network server
+-spec start_link(integer()) -> 'ok'.
+start_link(Port) ->
+	gen_server:start_link({local, ?SERVER}, ?MODULE, [Port], []).
 
+init([]) ->
+	{ok, #status{}}.
+
+%% TCP
+
+%% UDP
 
 
 %% Connect remote node
