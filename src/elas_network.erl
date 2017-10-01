@@ -5,7 +5,7 @@
 
 -module(elas_network).
 -behaviour(gen_server).
--export([start_link/1,
+-export([start_link/2,
 		 parse_node/2]).
 
 -export([init/1]).
@@ -17,16 +17,31 @@
 %% -----------------------------------------------------------------
 
 %% Start network server
--spec start_link(integer()) -> 'ok'.
-start_link(Port) ->
-	gen_server:start_link({local, ?SERVER}, ?MODULE, [Port], []).
+-spec start_link(integer(), integer()) -> 'ok'.
+start_link(TPort, UPort) ->
+	gen_server:start_link({local, ?SERVER}, ?MODULE, [TPort, UPort], []).
 
-init([]) ->
+%% Stop network server
+-spec stop() -> 'ok'.
+stop() ->
+	terminate().
+
+init([TPort, UPort]) ->
+	
+	
 	{ok, #status{}}.
 
-%% TCP
+%% Start TCP server
+-spec start_tcp_listener(integer(), list()) -> 'ok'.
+start_tcp_listener(Port, Option) ->
+	Socket = gen_tcp:listen(Port, []),
+	ok.
 
-%% UDP
+
+%% Start UDP server
+-spec start_udp_listener(integer(), list()) -> 'ok'.
+start_udp_listener(Port, Option) ->
+	ok.
 
 
 %% Connect remote node
