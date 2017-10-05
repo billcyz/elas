@@ -17,7 +17,9 @@
 bind_project(ProjectId) ->
 	1.
 
-%% Test function
+%% Test function (currently for parsing input file)
 test(Fun) ->
 	2.
+
+
 
