@@ -39,4 +39,24 @@ parse_file(File) ->
 			  [FileSize, AvgSize, RstSize]).
 
 
+%% tcp server test
+-spec test_server(atom()) -> 'ok'.
+test_server(SrvType) ->
+	case SrvType of
+		tcp ->
+			case start_tcp_server(10000) of
+				E -> E
+			end
+	end.
+
+
+%% tcp server template
+-spec start_tcp_server(integer()) -> 'ok'.
+start_tcp_server(Port) ->
+	elas_unit_tcpserver_sup:start_link(Port).
+
+
+
+
+
 
