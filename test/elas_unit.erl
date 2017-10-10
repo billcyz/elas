@@ -6,7 +6,8 @@
 
 -module(elas_unit).
 
--export([parse_file/1]).
+-export([parse_file/1,
+		 test_server/1]).
 
 -define(PROCESS_NUM, 1).
 

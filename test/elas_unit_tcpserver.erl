@@ -8,7 +8,7 @@
 
 -export([start_link/1]).
 
--record(state, {socket, accept_socket}).
+-record(state, {socket, asocket}).
 
 -define(SERVER, tcp_srv).
 
@@ -20,22 +20,24 @@ start_link(Socket) ->
 init([Socket]) ->
 	io:format("Get socket ~p~n", [Socket]),
 	{ok, ASocket} = gen_tcp:accept(Socket),
-	{ok, #state{socket = Socket, accept_socket = ASocket}}.
+	io:format("Accept socket is ~p~n", [ASocket]),
+	{ok, #state{socket = Socket, asocket = ASocket}}.
 
-handle_info({tcp, _Socket, _Data}, 
-			S = #state{socket = Socket, accept_socket = ASocket}) ->
-	inet:setopts(ASocket, [{active, once}]),
-	{ok, Packet} = gen_tcp:recv(ASocket, 0),
-	io:format("Received packet is ~p~n", [Packet]),
-	{noreply, S};
-handle_info({error, closed}, #state{socket = Socket} = NewState) ->
-	io:format("Listening socket ~p closed ~n", [Socket]),
+%% handle_info(timeout, NewState = #state{asocket = AS}) ->
+%% 	inet:setopts(AS, [{active, once}]),
+%% 	io:format("Set accept socket ~p to active once~n", [AS]),
+%% 	{noreply, NewState};
+handle_info({tcp, S, Data}, NewState) ->
+%% 	{ok, Packet} = gen_tcp:recv(ASocket, 0),
+	io:format("Received packet is ~p~n", [Data]),
+	send_msg(Data, S),
 	{noreply, NewState};
-handle_info({error, timeout}, #state{socket = Socket} = NewState) ->
-	io:format("Exceeded connection timeout~n"),
+handle_info({tcp_error, S, Reason}, NewState) ->
+	io:format("Socket ~p has error ~p~n", [S, Reason]),
 	{noreply, NewState};
-handle_info({error, system_limit}) ->
-	2.
+handle_info({tcp_closed, S}, NewState) ->
+	io:format("Socket ~p closed~n", [S]),
+	{noreply, NewState}.
 
 handle_call(_Request, _From, State) ->
 	{noreply, State}.
@@ -43,12 +45,15 @@ handle_call(_Request, _From, State) ->
 handle_cast(_Request, State) ->
 	{noreply, State}.
 
-terminate(_Reason, #state{accept_socket = Socket}) ->
-	gen_tcp:close(Socket),
+terminate(_Reason, #state{socket = S}) ->
+	gen_tcp:close(S),
 	ok.
 
 code_change(_Old, State, _Extra) ->
 	{ok, State}.
 
+-spec send_msg(binary(), atom()) -> 'ok'.
+send_msg(Msg, S) ->
+	gen_tcp:send(S, Msg).
 
 

@@ -20,7 +20,7 @@ start_link(Port) ->
 	end.
 
 init([Port]) ->
-	{ok, Socket} = gen_tcp:listen(Port, [binary, {active, false}]),
+	{ok, Socket} = gen_tcp:listen(Port, [binary, {active, true}]),
 	{ok, {{one_for_one, 0, 60}, 
 		  [{tcp_srv, {elas_unit_tcpserver, start_link, [Socket]},
 			permanent, 1000, worker, [elas_unit_tcpserver]}]}}.
