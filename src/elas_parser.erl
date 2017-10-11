@@ -23,6 +23,7 @@ init([]) ->
 
 handle_call(init_test, _From, State) ->
 	R = parse_example(),
+	
 	{reply, R, State}.
 
 
