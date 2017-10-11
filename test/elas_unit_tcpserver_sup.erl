@@ -6,7 +6,8 @@
 -behaviour(supervisor).
 -export([init/1]).
 
--export([start_link/1]).
+-export([start_link/1,
+		 start_socket/0]).
 
 -define(SERVER, tcp_sup).
 
@@ -20,8 +21,16 @@ start_link(Port) ->
 	end.
 
 init([Port]) ->
-	{ok, Socket} = gen_tcp:listen(Port, [binary, {active, true}]),
-	{ok, {{one_for_one, 0, 60}, 
+	{ok, Socket} = gen_tcp:listen(Port, [binary, {active, false}]),
+	spawn_link(fun init_listener/0),
+	{ok, {{simple_one_for_one, 60, 3600}, 
 		  [{tcp_srv, {elas_unit_tcpserver, start_link, [Socket]},
-			permanent, 1000, worker, [elas_unit_tcpserver]}]}}.
+			temporary, 1000, worker, [elas_unit_tcpserver]}]}}.
+
+start_socket() ->
+	supervisor:start_child(?SERVER, []).
+
+init_listener() ->
+	[start_socket() || _ <- lists:seq(1, 5)],
+	ok.
 

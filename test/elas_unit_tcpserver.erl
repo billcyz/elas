@@ -8,52 +8,50 @@
 
 -export([start_link/1]).
 
--record(state, {socket, asocket}).
-
--define(SERVER, tcp_srv).
+-record(state, {socket}).
 
 %% ------------------------------------------------------------
 
 start_link(Socket) ->
-	gen_server:start_link({local, ?SERVER}, ?MODULE, [Socket], []).
+	gen_server:start_link(?MODULE, [Socket], []).
 
 init([Socket]) ->
 	io:format("Get socket ~p~n", [Socket]),
-	{ok, ASocket} = gen_tcp:accept(Socket),
-	io:format("Accept socket is ~p~n", [ASocket]),
-	{ok, #state{socket = Socket, asocket = ASocket}}.
+	
+	gen_server:cast(self(), accept),
+	{ok, #state{socket = Socket}}.
 
-%% handle_info(timeout, NewState = #state{asocket = AS}) ->
-%% 	inet:setopts(AS, [{active, once}]),
-%% 	io:format("Set accept socket ~p to active once~n", [AS]),
-%% 	{noreply, NewState};
-handle_info({tcp, S, Data}, NewState) ->
-%% 	{ok, Packet} = gen_tcp:recv(ASocket, 0),
-	io:format("Received packet is ~p~n", [Data]),
+handle_info({tcp, _S, Data}, NewState = #state{socket = S}) ->
+	io:format("Received data ~p~n", [Data]),
 	send_msg(Data, S),
+	inet:setopts(S, [{active, once}]),
+	io:format("Set socket active once again~n"),
 	{noreply, NewState};
 handle_info({tcp_error, S, Reason}, NewState) ->
 	io:format("Socket ~p has error ~p~n", [S, Reason]),
 	{noreply, NewState};
-handle_info({tcp_closed, S}, NewState) ->
-	io:format("Socket ~p closed~n", [S]),
-	{noreply, NewState}.
+handle_info({tcp_closed, _S}, NewState) ->
+	{stop, normal, NewState}.
 
 handle_call(_Request, _From, State) ->
 	{noreply, State}.
 
-handle_cast(_Request, State) ->
-	{noreply, State}.
+handle_cast(accept, S = #state{socket = Socket}) ->
+	{ok, ASocket} = gen_tcp:accept(Socket),
+	elas_unit_tcpserver_sup:start_socket(), %% start a new worker
+	inet:setopts(ASocket, [{active, once}]),
+	send_msg("accept socket established~n", ASocket),
+	{noreply, S#state{socket = ASocket}}.
 
-terminate(_Reason, #state{socket = S}) ->
-	gen_tcp:close(S),
+terminate(_Reason, _State) ->
 	ok.
 
 code_change(_Old, State, _Extra) ->
 	{ok, State}.
 
+
+
 -spec send_msg(binary(), atom()) -> 'ok'.
 send_msg(Msg, S) ->
 	gen_tcp:send(S, Msg).
-
 
