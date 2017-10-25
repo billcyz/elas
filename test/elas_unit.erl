@@ -37,7 +37,13 @@ parse_file(File) ->
 	AvgSize = FileSize div ?PROCESS_NUM,
 	RstSize = FileSize rem ?PROCESS_NUM,
 	io:format("File size is: ~p, average size is: ~p, rest size is: ~p~n",
-			  [FileSize, AvgSize, RstSize]).
+			  [FileSize, AvgSize, RstSize]),
+	
+	{ok, FileBin} = file:read_file(File),
+	
+	<<>> = FileBin,
+	
+	1.
 
 
 %% tcp server test
@@ -56,6 +62,15 @@ test_server(SrvType) ->
 start_tcp_server(Port) ->
 	elas_unit_tcpserver_sup:start_link(Port).
 
+
+
+%% ----------------------------------------------------------------------------
+%% ----------------------------------------------------------------------------
+
+%% parsing file pieces
+-spec parse_file_piece(binary()) -> 'ok'.
+parse_file_piece() ->
+	1.
 
 
 
