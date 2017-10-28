@@ -9,7 +9,8 @@
 -export([init/1, handle_call/3, handle_cast/2, handle_info/2, terminate/2, code_change/3]).
 
 -export([start_link/0,
-		 create_table/2, delete_table/1, check_table/1]).
+		 create_table/2, delete_table/1, check_table/1,
+		 store_resource_path/1]).
 
 
 -record(state, {}).
@@ -51,6 +52,11 @@ check_table(Tab) ->
 		R -> R
 	end.
 
+%% Store resource path for response
+-spec store_resource_path(binary() | list()) -> 'ok'.
+store_resource_path(Path) ->
+	gen_server:cast(?MODULE, {store_path, Path}).
+
 %% Store dataset for response
 %% Dataset can be plaintext, json, xml, and csv
 store_dataset(Data) ->
@@ -59,4 +65,15 @@ store_dataset(Data) ->
 
 %% Handle Behaviour
 handle_call() -> 1.
+
+handle_cast({store_path, Path}, S = #state{}) ->
+	ResPath = case is_binary(Path) of
+				  true -> binary_to_list(Path);
+				  false -> Path
+			  end,
+	ets:insert(ets_path, ResPath),
+	{noreply, S}.
+
+
+
 
