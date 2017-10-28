@@ -24,6 +24,7 @@ start_link() ->
 init([]) ->
 	{ok, #state{}}.
 
+
 %% Add local component (parser, user_script, etc)
 -spec add_component(atom(), list()) -> 'ok'.
 add_component(CompName, MFA) ->
