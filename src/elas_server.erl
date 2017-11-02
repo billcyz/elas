@@ -9,11 +9,12 @@
 -behaviour(gen_server).
 -export([init/1, handle_call/3, handle_cast/2, handle_info/2, terminate/2, code_change/3]).
 
--export([start_link/0]).
+-export([start_link/0,
+		 add_project/2]).
 
 
 
--record(state, {}).
+-record(state, {project}).
 
 %% -----------------------------------------------------------------
 
@@ -22,8 +23,23 @@ start_link() ->
 	gen_server:start_link({local, ?MODULE}, ?MODULE, [], []).
 
 init([]) ->
-	{ok, #state{}}.
+	{ok, #state{project = none}}.
 
+
+%% Add project with port
+-spec add_project(atom(), integer()) -> 'ok'.
+add_project(Project, Port) ->
+	gen_server:call(?MODULE, {add_project, [Project, Port]}).
+
+%% Delete project
+-spec delete_project(atom(), list()) -> 'ok'.
+delete_project(Project, Option) ->
+	gen_server:call(?MODULE, {delete_project, [Project, Option]}).
+
+%% Clean all project
+-spec clean_all_project() -> 'ok'.
+clean_all_project() ->
+	1.
 
 %% Add local component (parser, user_script, etc)
 -spec add_component(atom(), list()) -> 'ok'.
@@ -45,6 +61,24 @@ add_remoteComponent(NodeName, CompName, MFA) ->
 		E -> E
 	end.
 
-
+handle_call({add_project, [Project, Port]}, _From, 
+			S = #state{project = _Project}) ->
+	Reply = case ets:lookup(ets_project, Project) of
+				[] -> ets:insert_new(ets_project, {Project, Port});
+				_ -> project_exists
+			end,
+	{reply, Reply, S#state{project = Project}};
+handle_call({delete_project, [Project, Option]}, _From,
+			S = #state{project = _Project}) ->
+	case Option of
+		all ->
+			clean_all_project(),
+			Reply = {ok, all_project_cleaned},
+			{reply, Reply, S#state{project = none}};
+		[branch, BranchName] -> 
+			clean_project(Project, BranchName),
+			Reply = {ok, project_branch_cleaned},
+			{reply, Reply, S#state{project = Project}}
+	end.
 
 

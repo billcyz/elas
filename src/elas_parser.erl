@@ -6,7 +6,8 @@
 -behaviour(gen_server).
 -export([init/1]).
 
--export([start_link/0]).
+-export([start_link/0,
+		 transfer_path/1]).
 
 -record(state, {}).
 
@@ -44,6 +45,12 @@ parse_url() ->
 parse_example() ->
 	1.
 
-
-
+%% Transfer binary path to list
+-spec transfer_path(binary() | list()) -> 'ok'.
+transfer_path(P) ->
+	Path = case is_binary(P) of
+			   true -> binary_to_list(P);
+			   false -> P
+		   end,
+	Path.
 

@@ -35,6 +35,10 @@ create_table(Tab, TabOption) ->
 %% Delete ets table
 -spec delete_table(atom()) -> 'ok'.
 delete_table(Tab) ->
+	case Tab of
+		all -> 1;
+		_ when is_atom(Tab) -> 2
+	end,
 	case check_table(Tab) of
 		undefined -> {Tab, table_undefined};
 		_ ->
