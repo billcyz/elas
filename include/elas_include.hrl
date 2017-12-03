@@ -1,1 +1,2 @@
 -define(SERVER_URL, "/elas/").
+-define(DEFAULT_HTTP_PORT, 8080).
