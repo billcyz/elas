@@ -24,7 +24,8 @@ start_link(Port) ->
 	end.
 
 init([Port]) ->
-	{ok, Socket} = gen_tcp:listen(Port, [binary, {active, false}]),
+	{ok, Socket} = gen_tcp:listen(Port, [binary, {active, false},
+    {packet, http_bin}]),
 	spawn_link(fun init_listener/0),
 	{ok, {{simple_one_for_one, 60, 3600}, 
 		  [{http_server, {elas_http, start_link, [Socket]},
@@ -36,6 +37,7 @@ start_socket() ->
 init_listener() ->
 	[start_socket() || _ <- lists:seq(1, 5)],
 	ok.
+
 
 
 
