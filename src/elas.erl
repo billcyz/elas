@@ -14,13 +14,25 @@
 
 -module(elas).
 
--export([]).
+-export([start/0, start/1]).
+
+
+-include("elas_include.hrl").
 
 %% -----------------------------------------------------------------
 
 %% Start server
-start(Port) when is_port(Port) ->
-	ok.
+start() -> start(?DEFAULT_HTTP_PORT).
+
+start(Port) when is_integer(Port) ->
+	Service = service_name(Port),
+	
+	case elas_server:start_link(Service) of
+		{ok, _Pid} -> {ok, elas_started};
+		E -> E
+	end,
+	
+	elas_http_sup:start_link(Port).
 	
 %% 	case elas_server:start_link(Port) of
 %% 		{ok, _Pid} -> {ok, started};
@@ -39,6 +51,20 @@ stop() ->
 %% 
 %% %% Return url
 
+
+%% Service name
+-spec service_name(integer()) -> atom().
+service_name(Port) -> list_to_atom("elas_" ++ integer_to_list(Port)).
+
+%% Data storage name
+-spec storage_name(integer()) -> atom().
+storage_name(Port) -> list_to_atom("elas_" ++ integer_to_list(Port)
+								  ++ "_storage").
+
+%% Http service name
+-spec http_name(integer()) -> atom().
+http_name(Port) -> list_to_atom("elas_" ++ integer_to_list(Port)
+							   ++ "_http").
 
 %% Connect remote node or url
 -spec try_connect('node' | 'url', atom()) -> any().
