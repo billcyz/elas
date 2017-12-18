@@ -36,22 +36,22 @@ add_project(Project, Port) ->
 %% Delete project
 -spec delete_project(atom(), list()) -> 'ok'.
 delete_project(Project, Option) ->
-  gen_server:call(?MODULE, {delete_project, [Project, Option]}).
+	gen_server:call(?MODULE, {delete_project, [Project, Option]}).
 
 %% Clean all project
 -spec clean_all_project() -> 'ok'.
 clean_all_project() ->
-  gen_server:cast(?MODULE, clean_all_project),
-  1.
+	gen_server:cast(?MODULE, clean_all_project),
+	1.
 
 %% Import response
 -spec import_response(atom(), list(), atom(), list()) -> 'ok'.
 import_response(Project, Uri, ResType, ResSrc) ->
-  gen_server:call(?MODULE, {import_response, [Project, Uri, ResType, ResSrc]}),
-  1.
+	gen_server:call(?MODULE, {import_response, [Project, Uri, ResType, ResSrc]}),
+	1.
 
 init([]) ->
-  {ok, #state{project = []}}.
+	{ok, #state{project = []}}.
 
 
 %% Add local component (parser, user_script, etc)
@@ -125,4 +125,11 @@ handle_call({import_response, [Project, Uri, ResType, ResSrc]},
 handle_cast(clean_all_project, State) ->
   elas_meman:delete_table(all),
   {noreply, State}.
+
+%% Check project and prject port duplication
+%% true -> project and port is available to use
+%% false -> project and port are not available to use
+-spec check_project_port(atom(), integer()) -> true | false.
+check_project_port(Project, Port) ->
+	
 

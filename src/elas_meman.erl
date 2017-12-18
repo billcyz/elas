@@ -15,6 +15,8 @@
 
 -record(state, {project_sturcture}).
 
+%% Store project port relationship into map
+
 %% -----------------------------------------------------------------
 
 %% Start server
@@ -23,7 +25,14 @@ start_link() ->
 
 init([]) ->
 	%% initialize project structure list
-  {ok, #state{project_sturcture = []}}.
+	{ok, #state{project_sturcture = []}}.
+
+
+%% Check project basic info
+-spec check_project_info(atom(), integer()) -> 'ok'.
+check_project_info(Project, Port) ->
+	case ets:lookup(_, _) of
+	1.
 
 %% Create ets table
 -spec create_table(atom(), list()) -> 'ok'.

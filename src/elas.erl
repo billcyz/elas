@@ -14,7 +14,8 @@
 
 -module(elas).
 
--export([start/0, start/1]).
+-export([start/0, start/1, stop/0,
+		 test/1]).
 
 
 -include("elas_include.hrl").
@@ -33,24 +34,34 @@ start(Port) when is_integer(Port) ->
 	end,
 	
 	elas_http_sup:start_link(Port).
-	
-%% 	case elas_server:start_link(Port) of
-%% 		{ok, _Pid} -> {ok, started};
-%% 		E -> E
-%% 	end.
-
 
 %% Stop server
+-spec stop() -> 'ok'.
 stop() ->
 	elas_server:stop(),
 	ok.
 
-%% %% Import dataset
-%% import_dataset() ->
-%% 	1.
-%% 
-%% %% Return url
+%% Test basic functionality
+-spec test(atom()) -> any().
+test(ServName) when is_atom(ServName)->
+	case ServName of
+		default_response -> elas_server:get_default_response();
+		default_json -> elas_server:get_default_json();
+		E -> {error, not_supported_service, E}
+	end.
 
+%% Add project.
+%% add_project(ProjectName, ProjectPort)
+-spec add_project(atom(), integer()) -> any().
+add_project(ProjectName, ProjectPort) ->
+	case elas_server:check_project_port(ProjectName, ProjectPort) of
+		true -> elas_server:add_project(ProjectName, ProjectPort);
+		{false, E} -> E
+	end.
+
+%% Delete project
+-spec delete_project() -> 'ok'.
+delete_project() -> 'ok'.
 
 %% Service name
 -spec service_name(integer()) -> atom().
