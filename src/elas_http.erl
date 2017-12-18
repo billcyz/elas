@@ -6,8 +6,10 @@
 
 -module(elas_http).
 -behaviour(gen_server).
--export([add_resource_path/1,
-		 parse_resource_path/1]).
+
+-export([init/1, handle_info/2, handle_call/3, handle_cast/2, code_change/3, terminate/2]).
+
+-export([start_link/1, add_resource_path/1]).
 
 -record(state, {socket}).
 
@@ -26,7 +28,8 @@ init([Socket]) ->
 
 handle_info({tcp, _S, Data}, NewState = #state{socket = S}) ->
 	io:format("Received data ~p~n", [Data]),
-	send_msg(Data, S),
+  send_response("Hello", S),
+  parse_input(Data),
 	inet:setopts(S, [{active, once}]),
 	io:format("Set socket active once again~n"),
 	{noreply, NewState};
@@ -57,11 +60,26 @@ code_change(_Old, State, _Extra) ->
 send_msg(Msg, S) ->
 	gen_tcp:send(S, Msg).
 
+%% Send response message
+-spec send_response(list(), socket()) -> 'ok'.
+send_response(Msg, Conn) ->
+  B = iolist_to_binary(Msg),
+  ResponseMsg = iolist_to_binary(io_lib:fwrite(
+    "HTTP/1.0 200 OK\nContent-Type: text/html\nContent-Length: ~p\n\n~s",
+    [size(B), B]
+  )),
+  gen_tcp:send(Conn, ResponseMsg),
+  gen_tcp:close(Conn),
+  ok.
+
 %% Parse incoming data
--spec parse_input(binary()) -> 'ok'.
+-spec parse_input(binary()) -> any().
 parse_input(Data) ->
-	
-	1.
+	case erlang:decode_packet(http_bin, Data, [{packet_size, 0}]) of
+    {ok, Packet, _Rest} ->
+      io:format("Received data is ~p~n", [binary_to_term(Packet)]);
+    E -> io:format("Get message ~p~n", [E])
+  end.
 
 
 %% Store process
@@ -73,10 +91,10 @@ add_resource_path(Path) ->
 	elas_meman:store_resource_path(Path).
 
 %% Find resource data
--spec find_resource_data(binary() | list()) -> any().
-find_resource_data(Path) ->
-	ResPath = elas_parser:transfer_path(Path),
-	1.
+%%-spec find_resource_data(binary() | list()) -> any().
+%%find_resource_data(Path) ->
+%%	ResPath = elas_parser:transfer_path(Path),
+%%	1.
 	
 
 %% Retrieve process
@@ -86,3 +104,5 @@ find_resource_data(Path) ->
 %% parse_resource_path(Path) ->
 %% 	%% not useful currently
 %% 	string:tokens(Path, "/").
+
+
