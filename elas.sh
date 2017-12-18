@@ -1,4 +1,6 @@
 #!/bin/bash
+# ELAS command line interface
 
-echo hello
-
+hrlp() {
+	
+}
