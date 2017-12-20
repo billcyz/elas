@@ -13,6 +13,14 @@
 
 -define(SERVER, elas_parser).
 
+-define(NULL, ' ').
+-define(COMMA, ',').
+-define(COLON, ':').
+-define(START_OBJ, '{').
+-define(START_ARRAY, '[').
+-define(END_ARRAY, ']').
+-define(END_OBJ, '}').
+
 %% -----------------------------------------------------------------
 
 %% Start parse server
@@ -34,7 +42,31 @@ check_dataset_types(File) -> 1.
 
 %% Parse input dataset (file)
 get_input(File) ->
-	{ok, IoD} = file:open(File, [read]),
+%% 	{ok, IoD} = file:open(File, [read]),
+	
+	{ok, Bin} = file:read_file(File),
+	{ok, Token, _} = erl_scan:string(binary_to_list(Bin)), %% File token list
+	RToken = lists:reverse(Token), %% reverse list
+	parse_structure(Token, RToken),
+	
+	1.
+
+%% Parse token in normal
+parse_token(Token) ->
+	1.
+
+%% Parse token in reverse
+parse_rtoken(RToken) ->
+	2.
+
+%% Organize dataset structure
+-spec parse_structure(list(), list()) -> 'ok'.
+parse_structure(Token, RToken) ->
+	[TH|TT] = Token,
+	case TH of
+		{?START_OBJ, Line} ->
+			
+	end,
 	1.
 
 %% Parse user request url
