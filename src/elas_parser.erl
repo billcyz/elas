@@ -44,6 +44,8 @@ check_dataset_types(File) -> 1.
 get_input(File) ->
 %% 	{ok, IoD} = file:open(File, [read]),
 	
+	spawn(fun() -> 1 end),
+	
 	{ok, Bin} = file:read_file(File),
 	{ok, Token, _} = erl_scan:string(binary_to_list(Bin)), %% File token list
 	RToken = lists:reverse(Token), %% reverse list
@@ -68,6 +70,8 @@ parse_structure(Token, RToken) ->
 			
 	end,
 	1.
+
+
 
 %% Parse user request url
 parse_url() ->
