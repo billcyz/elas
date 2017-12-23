@@ -117,12 +117,14 @@ handle_call({delete_project, [Project, Option]}, _From,
   end;
 %% Add project url path
 handle_call({add_project_url, [Project, Url]}, _From, State) ->
+	P = find_project(Project),
 	if
-		Project =:= find_project(Project) ->
-			case elas_meman:store_resource_path(Url) of
+		Project =:= P ->
+			case elas_meman:store_resource_path(Project, Url) of
 				ok -> {reply, url_added, State};
 				E -> {reply, E, State}
-			end
+			end;
+		true -> {error, project_not_exist}
 	end;
 %% Add project response
 handle_call({import_response, [Project, Uri, ResType, ResSrc]},
@@ -140,5 +142,11 @@ handle_cast(clean_all_project, State) ->
 %% false -> project and port are not available to use
 -spec check_project_port(atom(), integer()) -> true | false.
 check_project_port(Project, Port) ->
-	
+	1.
+
+%% check if project exist
+-spec find_project(atom()) -> atom() | false.
+find_project(Project) -> gen_server:call(elas_meman, {check_project, Project}).
+
+
 

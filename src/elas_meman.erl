@@ -9,9 +9,12 @@
 -export([init/1, handle_call/3, handle_cast/2, handle_info/2, terminate/2, code_change/3]).
 
 -export([start_link/0,
-  create_table/2, delete_table/1, check_table/1, check_project_info/2,
-  store_resource_path/1]).
+		 create_table/2, delete_table/1, check_table/1, check_project_info/2,
+		 store_resource_path/1]).
 
+
+%% Test export
+-export([]).
 
 -record(state, {project_sturcture}).
 
@@ -24,13 +27,19 @@ start_link() ->
   gen_server:start_link({local, ?MODULE}, ?MODULE, [], []).
 
 init([]) ->
+	prepare_tables(),
 	%% initialize project structure list
 	{ok, #state{project_sturcture = []}}.
 
+%% Prepare all related tables when the process starts
+%% project table, 
+-spec prepare_table() -> 'ok'.
+prepare_table() ->
+	
 
 %% Check project basic info
--spec check_project_info(atom(), integer()) -> true | false.
-check_project_info(Project, Port) ->
+-spec check_project_info(atom()) -> true | false.
+check_project_info(Project) ->
 	case ets:lookup(_, _) of
 		_ -> true;
 		E -> false
@@ -64,24 +73,30 @@ delete_table(Tab) ->
 %% Check ets table info
 -spec check_table(atom()) -> list().
 check_table(Tab) ->
-  case ets:info(Tab) of
-    undefined -> undefined;
-    R -> R
-  end.
+	case ets:info(Tab) of
+		undefined -> undefined;
+		R -> R
+	end.
 
 %% Store resource path for response
--spec store_resource_path(binary() | list()) -> 'ok'.
-store_resource_path(Path) ->
-  gen_server:cast(?MODULE, {store_path, Path}).
+-spec store_resource_path(atom(), binary() | list()) -> 'ok'.
+store_resource_path(Project, Path) ->
+	
+%% 	gen_server:cast(?MODULE, {store_path, Path}).
 
 %% Store dataset for response
 %% Dataset can be plaintext, json, xml, and csv
 store_dataset(Data) ->
-  gen_server:call(_, _, _).
+	gen_server:call(_, _, _).
 
 
 %% Handle Behaviour
-handle_call() -> 1.
+%% Check project exist
+handle_call({check_project, Project}, _From, State) ->
+	case check_project_info(Project) of
+		true -> {reply, Project, State};
+		false -> {reply, false, State}
+	end.
 
 handle_cast({store_path, Path}, S = #state{}) ->
   ResPath = case is_binary(Path) of

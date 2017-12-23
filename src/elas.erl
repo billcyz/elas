@@ -74,7 +74,7 @@ add_project_url(Project, Url) when is_list(Url) ->
 	case is_pid(elas_server) of
 		true -> gen_server:call(elas_server, 
 								{add_project_url, [Project, Url]});
-		_ -> {error, server_not_started}
+		false -> {error, server_not_started}
 	end.
 		  
 %% Service name
