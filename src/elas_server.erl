@@ -25,9 +25,6 @@ start_link() ->
 start_link(ServiceName) ->
 	gen_server:start_link({local, ServiceName}, ?MODULE, [], []).
 
-init([]) ->
-	{ok, #state{project = none}}.
-
 %% Add project with port
 -spec add_project(atom(), integer()) -> 'ok'.
 add_project(Project, Port) ->
@@ -49,10 +46,6 @@ clean_all_project() ->
 import_response(Project, Uri, ResType, ResSrc) ->
 	gen_server:call(?MODULE, {import_response, [Project, Uri, ResType, ResSrc]}),
 	1.
-
-init([]) ->
-	{ok, #state{project = []}}.
-
 
 %% Add local component (parser, user_script, etc)
 -spec add_component(atom(), list()) -> 'ok'.
@@ -98,6 +91,10 @@ add_response(HttpUri, ResType, ResSrc) ->
   end,
   1.
 
+init([]) ->
+	{ok, #state{project = none}}.
+
+%% Add project
 handle_call({add_project, [Project, Port]}, _From,
     S = #state{project = _Project}) ->
   Reply = case ets:lookup(ets_project, Project) of
@@ -105,6 +102,7 @@ handle_call({add_project, [Project, Port]}, _From,
             _ -> project_exists
           end,
   {reply, Reply, S#state{project = Project}};
+%% Delete project
 handle_call({delete_project, [Project, Option]}, _From,
     S = #state{project = _Project}) ->
   case Option of
@@ -117,6 +115,16 @@ handle_call({delete_project, [Project, Option]}, _From,
       Reply = {ok, project_branch_cleaned},
       {reply, Reply, S#state{project = Project}}
   end;
+%% Add project url path
+handle_call({add_project_url, [Project, Url]}, _From, State) ->
+	if
+		Project =:= find_project(Project) ->
+			case elas_meman:store_resource_path(Url) of
+				ok -> {reply, url_added, State};
+				E -> {reply, E, State}
+			end
+	end;
+%% Add project response
 handle_call({import_response, [Project, Uri, ResType, ResSrc]},
     _From, S = #state{project = _Project}) ->
   add_response(),

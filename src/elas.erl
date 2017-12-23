@@ -11,12 +11,15 @@
 %% 4. parse input dataset & url
 %% 5. return message / result
 %%
+%% Basic project structure
+%% elas_10000 (service name) -> demoproject (project name) -> /test/1/2/3 (project url)
 
 -module(elas).
 
 -export([start/0, start/1, stop/0,
 		 test/1]).
 
+-record(project, {name}).
 
 -include("elas_include.hrl").
 
@@ -29,7 +32,9 @@ start(Port) when is_integer(Port) ->
 	Service = service_name(Port),
 	
 	case elas_server:start_link(Service) of
-		{ok, _Pid} -> {ok, elas_started};
+		{ok, _Pid} ->
+			
+			{ok, elas_started};
 		E -> E
 	end,
 	
@@ -62,6 +67,16 @@ add_project(ProjectName, ProjectPort) ->
 %% Delete project
 -spec delete_project() -> 'ok'.
 delete_project() -> 'ok'.
+
+%% Add url path for project
+-spec add_project_urls(atom(), list()) -> 'ok'.
+add_project_url(Project, Url) when is_list(Url) ->
+	case is_pid(elas_server) of
+		true -> gen_server:call(elas_server, 
+								{add_project_url, [Project, Url]});
+		_ -> {error, server_not_started}
+	end.
+		  
 
 %% Service name
 -spec service_name(integer()) -> atom().

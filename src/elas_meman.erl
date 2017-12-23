@@ -9,7 +9,7 @@
 -export([init/1, handle_call/3, handle_cast/2, handle_info/2, terminate/2, code_change/3]).
 
 -export([start_link/0,
-  create_table/2, delete_table/1, check_table/1,
+  create_table/2, delete_table/1, check_table/1, check_project_info/2,
   store_resource_path/1]).
 
 
@@ -29,10 +29,12 @@ init([]) ->
 
 
 %% Check project basic info
--spec check_project_info(atom(), integer()) -> 'ok'.
+-spec check_project_info(atom(), integer()) -> true | false.
 check_project_info(Project, Port) ->
 	case ets:lookup(_, _) of
-	1.
+		_ -> true;
+		E -> false
+	end.
 
 %% Create ets table
 -spec create_table(atom(), list()) -> 'ok'.

@@ -73,8 +73,9 @@ parse_structure(Token, RToken) ->
 
 
 
-%% Parse user request url
-parse_url() ->
+%% Parse user request url and request data
+-spec parse_url(atom(), list()) -> 'ok'.
+parse_url(Project, Url) when is_list(Url)->
 	1.
 
 %% Parse data sample
