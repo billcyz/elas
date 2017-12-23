@@ -61,6 +61,7 @@ parse_token(Token) ->
 parse_rtoken(RToken) ->
 	2.
 
+
 %% Organize dataset structure
 -spec parse_structure(list(), list()) -> 'ok'.
 parse_structure(Token, RToken) ->

@@ -60,6 +60,7 @@ delete_table(Tab) ->
       end
   end.
 
+
 %% Check ets table info
 -spec check_table(atom()) -> list().
 check_table(Tab) ->

@@ -77,7 +77,6 @@ add_project_url(Project, Url) when is_list(Url) ->
 		_ -> {error, server_not_started}
 	end.
 		  
-
 %% Service name
 -spec service_name(integer()) -> atom().
 service_name(Port) -> list_to_atom("elas_" ++ integer_to_list(Port)).
