@@ -9,14 +9,16 @@
 -export([init/1, handle_call/3, handle_cast/2, handle_info/2, terminate/2, code_change/3]).
 
 -export([start_link/0,
-		 create_table/2, delete_table/1, check_table/1, check_project_info/2,
-		 store_resource_path/1]).
+		 create_table/2, delete_table/1, check_table/1, check_project_info/1,
+		 store_resource_path/2]).
 
 
 %% Test export
 -export([]).
 
 -record(state, {project_sturcture}).
+
+-define(PROJECT_ETS, [project, project_url, url_content]).
 
 %% Store project port relationship into map
 
@@ -32,10 +34,12 @@ init([]) ->
 	{ok, #state{project_sturcture = []}}.
 
 %% Prepare all related tables when the process starts
-%% project table, 
--spec prepare_table() -> 'ok'.
-prepare_table() ->
-	
+%% project table (project), url table (project_url), url content table
+%% (url_content) 
+-spec prepare_tables() -> list().
+prepare_tables() ->
+	lists:map(
+	  fun(ETS) -> ets:new(ETS, [named_table]) end, ?PROJECT_ETS).
 
 %% Check project basic info
 -spec check_project_info(atom()) -> true | false.
@@ -78,11 +82,17 @@ check_table(Tab) ->
 		R -> R
 	end.
 
+%% Find required info in ets table
+
+
+
+
+
 %% Store resource path for response
 -spec store_resource_path(atom(), binary() | list()) -> 'ok'.
 store_resource_path(Project, Path) ->
-	
-%% 	gen_server:cast(?MODULE, {store_path, Path}).
+	Url = elas_parser:parse_url(Path),
+	gen_server:call(?MODULE, {store_path, Project, Url}).
 
 %% Store dataset for response
 %% Dataset can be plaintext, json, xml, and csv
@@ -96,15 +106,17 @@ handle_call({check_project, Project}, _From, State) ->
 	case check_project_info(Project) of
 		true -> {reply, Project, State};
 		false -> {reply, false, State}
+	end;
+%% Store url path to ets
+handle_call({store_path, Project, Path}, _From, S = #state{}) ->
+	case gen_server:call(?MODULE, {{check_project, Project}}) of
+		false -> {reply, invalid_project, S};
+		_ -> 
+			case ets:insert(ets_path, {Project, Path}) of
+				true -> {reply, ok, S};
+				E -> {reply, E, S}
+			end
 	end.
-
-handle_cast({store_path, Path}, S = #state{}) ->
-  ResPath = case is_binary(Path) of
-              true -> binary_to_list(Path);
-              false -> Path
-            end,
-  ets:insert(ets_path, ResPath),
-  {noreply, S}.
 
 
 

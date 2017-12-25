@@ -6,7 +6,7 @@
 -behaviour(gen_server).
 -export([init/1]).
 
--export([start_link/0,
+-export([start_link/0, parse_url/1,
 		 transfer_path/1]).
 
 -record(state, {}).
@@ -75,9 +75,16 @@ parse_structure(Token, RToken) ->
 
 
 %% Parse user request url and request data
--spec parse_url(atom(), list()) -> 'ok'.
-parse_url(Project, Url) when is_list(Url)->
-	1.
+%% Add "/" before url if the first element is not "/".
+%% Avoid url with underscore (_). Can replace any
+%% underscore with dash (-).
+-spec parse_url(list()) -> 'ok'.
+parse_url(Url) when is_list(Url)->
+	[UrlH|_] = Url,
+	case UrlH of
+		47 -> Url;
+		_ -> "/" ++ Url
+	end.
 
 %% Parse data sample
 parse_example() ->
