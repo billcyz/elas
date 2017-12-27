@@ -1,6 +1,7 @@
 #!/bin/bash
 # ELAS shell command line interface
 
+
 DEFAULT_PORT=8080
 #LOG_FILE=$HOME
 

@@ -135,7 +135,6 @@ store_resource_path(Project, Path) ->
 store_dataset(Data) ->
 	gen_server:call(_, _, _).
 
-
 %% Handle Behaviour
 %% Check project exist
 handle_call({check_project, Project}, _From, State) ->
