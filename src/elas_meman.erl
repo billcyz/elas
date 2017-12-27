@@ -10,7 +10,8 @@
 
 -export([start_link/0,
 		 create_table/2, delete_table/1, check_table/1, check_project_info/1,
-		 store_resource_path/2]).
+		 store_resource_path/2,
+		 find_project/1, find_project_url/2, find_url_content/2]).
 
 
 %% Test export
@@ -18,6 +19,9 @@
 
 -record(state, {project_sturcture}).
 
+%% (bag) project -> Project
+%% (bag) project_url -> {project, [{url_01}, {url_02}]}
+%% (bag) url_content -> {project, [{url_01}, {url_01 content}]}
 -define(PROJECT_ETS, [project, project_url, url_content]).
 
 %% Store project port relationship into map
@@ -39,7 +43,7 @@ init([]) ->
 -spec prepare_tables() -> list().
 prepare_tables() ->
 	lists:map(
-	  fun(ETS) -> ets:new(ETS, [named_table]) end, ?PROJECT_ETS).
+	  fun(ETS) -> ets:new(ETS, [named_table, bag]) end, ?PROJECT_ETS).
 
 %% Check project basic info
 -spec check_project_info(atom()) -> true | false.
@@ -83,10 +87,42 @@ check_table(Tab) ->
 	end.
 
 %% Find required info in ets table
+%% Find project
+-spec find_project(atom()) -> atom().
+find_project(Project) ->
+	case ets:lookup(project, Project) of
+		[] -> {no_project, Project};
+		_ -> {find_project, Project}
+	end.
 
+%% Find project url
+-spec find_project_url(atom(), list()) -> atom() | list().
+find_project_url(Project, Url) ->
+	ProjectUrl = ets:lookup(project_url, Project),
+	parse_project_url_list(Url, ProjectUrl).
 
+parse_project_url_list(U, [UrlH|UrlT]) ->
+	{_, {Url}} = UrlH,
+	if
+		Url =:= U -> {url_found, U};
+		true -> parse_project_url_list(U, UrlT)
+	end;
+parse_project_url_list(U, []) -> {url_not_found, U}.
 
+%% Find project url content
+-spec find_url_content(atom(), list()) -> term().
+find_url_content(Project, Url) ->
+	ContentList = ets:lookup_element(
+					url_content, Project, 2),
+	parse_url_content(Url, ContentList).
 
+parse_url_content(U, [ConH|ConT]) ->
+	[{Url}, {UrlContent}] = ConH,
+	if
+		Url =:= U -> {url_content_found, UrlContent};
+		true -> parse_url_content(U, ConT)
+	end;
+parse_url_content(U, []) -> {url_content_not_found, U}.
 
 %% Store resource path for response
 -spec store_resource_path(atom(), binary() | list()) -> 'ok'.
