@@ -19,38 +19,24 @@
 
 -record(state, {project_sturcture}).
 
-%% (bag) project -> Project
-%% (bag) project_url -> {project, [{url_01}, {url_02}]}
-%% (bag) url_content -> {project, [{url_01}, {url_01 content}]}
--define(PROJECT_ETS, [project, project_url, url_content]).
-
 %% Store project port relationship into map
 
 %% -----------------------------------------------------------------
 
 %% Start server
 start_link() ->
-  gen_server:start_link({local, ?MODULE}, ?MODULE, [], []).
+	gen_server:start_link({local, ?MODULE}, ?MODULE, [], []).
 
 init([]) ->
-	prepare_tables(),
 	%% initialize project structure list
 	{ok, #state{project_sturcture = []}}.
-
-%% Prepare all related tables when the process starts
-%% project table (project), url table (project_url), url content table
-%% (url_content) 
--spec prepare_tables() -> list().
-prepare_tables() ->
-	lists:map(
-	  fun(ETS) -> ets:new(ETS, [named_table, bag]) end, ?PROJECT_ETS).
 
 %% Check project basic info
 -spec check_project_info(atom()) -> true | false.
 check_project_info(Project) ->
-	case ets:lookup(_, _) of
-		_ -> true;
-		E -> false
+	case ets:lookup(project, Project) of
+		[_] -> true;
+		[] -> false
 	end.
 
 %% Create ets table
@@ -130,11 +116,6 @@ store_resource_path(Project, Path) ->
 	Url = elas_parser:parse_url(Path),
 	gen_server:call(?MODULE, {store_path, Project, Url}).
 
-%% Store dataset for response
-%% Dataset can be plaintext, json, xml, and csv
-store_dataset(Data) ->
-	gen_server:call(_, _, _).
-
 %% Handle Behaviour
 %% Check project exist
 handle_call({check_project, Project}, _From, State) ->
@@ -151,6 +132,12 @@ handle_call({store_path, Project, Path}, _From, S = #state{}) ->
 				true -> {reply, ok, S};
 				E -> {reply, E, S}
 			end
+	end;
+handle_call({add_url_action, {Project, Url, Action, Opt}},
+			_From, State) ->
+	case ets:insert(url_cation, [{Project, [Action, {Url}]}]) of
+		true -> {reply, ok, State};
+		E -> {reply, E, State}
 	end.
 
 

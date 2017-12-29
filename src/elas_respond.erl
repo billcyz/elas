@@ -14,6 +14,11 @@
 -record(state, {clientSocket, httpAction,
 				respondStatus}).
 
+-record(http_response, {header,
+						server,
+						version,
+						content}).
+
 %% -----------------------------------------------------------------
 
 %% Start respond server
@@ -36,6 +41,21 @@ respond_request(Url, HttpAction, Option) ->
 %% Reply raw dataset to user
 respond_raw() -> 1.
 
+
+%% Write response
+-spec write_response() -> 'ok'.
+
+%% Response element
+%% Opt -> [[header, ], [server, ], ..]
+-spec edit_response_element(list()) -> 'ok'.
+edit_response_element(Opt) ->
+	read_response_options(Opt).
+
+
+
+%% Prepare response according to options
+-spec send_response() -> 'ok'.
+send_response() -> 1.
 
 handle_call({respond_call, Url, HttpAction, Option}, Socket, State) ->
 	ParseResult = elas_parse:parse_url(Url),

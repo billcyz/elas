@@ -76,7 +76,18 @@ add_project_url(Project, Url) when is_list(Url) ->
 								{add_project_url, [Project, Url]});
 		false -> {error, server_not_started}
 	end.
-		  
+
+%% Add http action to url
+%% GET, POST, UPDATE, PUT, DELETE, HEAD.... (all transfered into lowercase)
+-spec add_url_action(atom(), list(), atom(), list()) -> 'ok'.
+add_url_action(Project, Url, Action, Opt) ->
+	case elas_http:is_action(Action) of
+		false -> {error, wrong_action, Action};
+		A -> gen_server:call(elas_meman, 
+							 {add_url_action, {Project, Url, A, Opt}})
+	end.
+
+
 %% Service name
 -spec service_name(integer()) -> atom().
 service_name(Port) -> list_to_atom("elas_" ++ integer_to_list(Port)).

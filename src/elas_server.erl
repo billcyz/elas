@@ -14,6 +14,11 @@
 
 -record(state, {project}).
 
+%% (bag) project -> Project
+%% (bag) project_url -> {project, [{url_01}, {url_02}]}
+%% (bag) url_content -> {project, [{url_01}, {url_01 content}]}
+-define(PROJECT_ETS, [project, project_url, url_content, url_action]).
+
 %% ------------------------------API-----------------------------------
 
 %% Start server
@@ -92,7 +97,17 @@ add_response(HttpUri, ResType, ResSrc) ->
   1.
 
 init([]) ->
+	prepare_tables(),
+	
 	{ok, #state{project = none}}.
+
+%% Prepare all related tables when the process starts
+%% project table (project), url table (project_url), url content table
+%% (url_content) 
+-spec prepare_tables() -> list().
+prepare_tables() ->
+	lists:map(
+	  fun(ETS) -> ets:new(ETS, [named_table, bag]) end, ?PROJECT_ETS).
 
 %% Add project
 handle_call({add_project, [Project, Port]}, _From,

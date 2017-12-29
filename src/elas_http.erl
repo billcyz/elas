@@ -9,7 +9,8 @@
 
 -export([init/1, handle_info/2, handle_call/3, handle_cast/2, code_change/3, terminate/2]).
 
--export([start_link/1, add_resource_path/1]).
+-export([start_link/1, add_resource_path/1,
+		 is_action/1]).
 
 -record(state, {socket}).
 
@@ -28,8 +29,8 @@ init([Socket]) ->
 
 handle_info({tcp, _S, Data}, NewState = #state{socket = S}) ->
 	io:format("Received data ~p~n", [Data]),
-  send_response("Hello", S),
-  parse_input(Data),
+	send_response("Hello", S),
+	parse_input(Data),
 	inet:setopts(S, [{active, once}]),
 	io:format("Set socket active once again~n"),
 	{noreply, NewState};
@@ -90,19 +91,17 @@ add_resource_path(Path) ->
 	io:format("Final resource path is: ~p~n", [?SERVER_URL ++ Path]),
 	elas_meman:store_resource_path(Path).
 
-%% Find resource data
-%%-spec find_resource_data(binary() | list()) -> any().
-%%find_resource_data(Path) ->
-%%	ResPath = elas_parser:transfer_path(Path),
-%%	1.
-	
-
-%% Retrieve process
-%% Parse resource path and redirect traffic
-%% string, binary
-%% -spec parse_resource_path(list()) -> 'ok'.
-%% parse_resource_path(Path) ->
-%% 	%% not useful currently
-%% 	string:tokens(Path, "/").
+%% Http action collection
+-spec is_action(list()) -> atom() | false.
+is_action(Action) ->
+	case string:to_upper(Action) of
+		"GET" -> get;
+		"POST" -> post;
+		"UPDATE" -> update;
+		"PUT" -> put;
+		"DELETE" -> delete;
+		"HEAD" -> head;
+		_ -> false
+	end.
 
 
