@@ -16,7 +16,7 @@
 
 -record(state, {socket}).
 
-%% -include("elas_include.hrl").
+-include("elas_include.hrl").
 
 %% -----------------------------------------------------------------
 
@@ -29,17 +29,21 @@ init([Socket]) ->
 	gen_server:cast(self(), start),
 	{ok, #state{socket = Socket}}.
 
-handle_info({tcp, S, Data}, NewState = #state{socket = _S}) ->
-	io:format("Received data ~p~n", [Data]),
-	Msg = parse_input(Data),
-	send_response(Msg, S),
-%% 	inet:setopts(S, [{active, once}]),
-	{noreply, NewState};
+handle_info({tcp, _S, Data}, State) ->
+	io:format("Received TCP data ~p~n", [Data]),
+	{noreply, State};
 handle_info({tcp_error, S, Reason}, NewState) ->
 	io:format("Socket ~p has error ~p~n", [S, Reason]),
 	{noreply, NewState};
 handle_info({tcp_closed, _S}, NewState) ->
-	{stop, normal, NewState}.
+	{stop, normal, NewState};
+handle_info({http, S, Data}, State) ->
+	elas_http_sup:start_socket(),
+	io:format("~p got message: ~p~n", [self(), Data]),
+	PData = parse_data(Data),
+	send_response(list_to_binary(PData), S),
+	exit(self(), normal),
+	{noreply, State}.
 
 handle_call(_Request, _From, State) ->
 	{noreply, State}.
@@ -47,9 +51,7 @@ handle_call(_Request, _From, State) ->
 handle_cast(start, S = #state{socket = Socket}) ->
 	io:format("Initialize Start~n"),
 	{ok, ASocket} = gen_tcp:accept(Socket),
-	elas_http_sup:start_socket(), %% start a new worker
 	inet:setopts(ASocket, [{active, once}]),
-%% 	send_msg("accept socket established~n", ASocket),
 	{noreply, S#state{socket = ASocket}}.
 
 terminate(_Reason, _State) ->
@@ -57,11 +59,6 @@ terminate(_Reason, _State) ->
 
 code_change(_Old, State, _Extra) ->
 	{ok, State}.
-
-%% Send message back
--spec send_msg(binary(), atom()) -> 'ok'.
-send_msg(Msg, S) ->
-	gen_tcp:send(S, Msg).
 
 %% Send response message
 %% -spec send_response(list(), socket()) -> 'ok'.
@@ -71,22 +68,29 @@ send_response(Msg, Conn) when is_binary(Msg) ->
 									 "HTTP/1.1 200 OK\nContent-Type: text/html\nContent-Length: ~p\n\n~s",
 									 [size(Msg), Msg])),
 	gen_tcp:send(Conn, ResponseMsg),
-	gen_tcp:close(Conn),
-	ok.
+	gen_tcp:close(Conn).
+
+%% 
+parse_data(Data) when is_binary(Data) ->
+	{http_request, RequestType, _RequestPath, _} = Data,
+	case RequestType of
+		'GET' -> "{http_request, get_request}";
+		'PUT' -> "{http_request, put_request}"
+	end.
 
 %%
 %% Parse incoming data
--spec parse_input(binary()) -> any().
-parse_input(Data) ->
-	case erlang:decode_packet(http_bin, Data, [{packet_size, 0}]) of
-		{ok, Packet, _Rest} ->
-			{_, Action, _RequestPath, _} = Packet,
-			case Action of
-				'GET' -> "http_request, get";
-				'PUT' -> "{http_request, put}"
-			end;
-		E -> E
-	end.
+%% -spec parse_input(binary()) -> any().
+%% parse_input(Data) ->
+%% 	case erlang:decode_packet(http_bin, Data, [{packet_size, 0}]) of
+%% 		{ok, Packet, _Rest} ->
+%% 			{_, Action, _RequestPath, _} = Packet,
+%% 			case Action of
+%% 				'GET' -> "{http_request, get}";
+%% 				'PUT' -> "{http_request, put}"
+%% 			end;
+%% 		E -> E
+%% 	end.
 
 
 %% Store process
@@ -109,6 +113,18 @@ is_action(Action) ->
 		"HEAD" -> head;
 		_ -> false
 	end.
+
+%% Http get action
+-spec http_get_action(term(), tuple()) -> list().
+http_get_action(RequestPath) ->
+	http_get_action(node(), RequestPath).
+http_get_action(Node, RequestPath) ->
+	{abs_path, Path} = RequestPath,
+	gen_server:call({elas_meman, Node}, {http_get, binary_to_list(Path)}).
+
+%% 	case elas_meman:check_project_url(Path) of
+%% 		ok -> 
+%% 	gen_server:call(elas_meman, {http_get, binary_to_list(Path)}).
 
 %% Status code
 -spec code_to_code_description(integer()) -> binary().

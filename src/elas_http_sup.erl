@@ -6,9 +6,10 @@
 -behaviour(supervisor).
 -export([init/1]).
 
--export([start_link/0, start_link/1]).
+-export([start_link/0, start_link/1,
+		 start_socket/0]).
 
-%% -include("elas_include.hrl").
+-include("elas_include.hrl").
 
 %% -----------------------------------------------------------------
 

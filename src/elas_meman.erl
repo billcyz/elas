@@ -10,8 +10,7 @@
 
 -export([start_link/0,
 		 create_table/2, delete_table/1, check_table/1, check_project_info/1,
-		 store_resource_path/2,
-		 find_project/1, find_project_url/2, find_url_content/2]).
+		 store_resource_path/2]).
 
 
 %% Test export
@@ -37,6 +36,19 @@ check_project_info(Project) ->
 	case ets:lookup(project, Project) of
 		[_] -> true;
 		[] -> false
+	end.
+
+%% Check project url (project, url, content)
+-spec check_project_url(list()) -> any().
+check_project_url(Url) ->
+	[Project|_] = string:tokens(Url, "/"),
+	case find_project(Project) of
+		{find_project, _} ->
+			case find_project_url(Project, Url) of
+				{url_found, _} -> {ok, Project, Url};
+				E -> E
+			end;
+		E -> E
 	end.
 
 %% Create ets table
@@ -110,6 +122,28 @@ parse_url_content(U, [ConH|ConT]) ->
 	end;
 parse_url_content(U, []) -> {url_content_not_found, U}.
 
+%% Check http action on specific url
+-spec check_url_action(atom(), list()) -> true | atom().
+check_url_action(Project, Url) when is_list(Url) -> 
+	check_url_action(return_action, Project, Url).
+
+check_url_action(Action, Project, Url) ->
+	case Action of
+		return_action ->
+			UrlCollection = ets:lookup_element(url_action, Project, 2),
+			return_url_action(Url, UrlCollection);
+		_ -> 1
+	end.
+
+-spec return_url_action(list(), list()) -> atom().
+return_url_action(_Url, []) -> 1;
+return_url_action(Url, UrlList) ->
+	[[A, {U}]|UT] = UrlList,
+	if
+		Url =:= U -> A;
+		true -> return_url_action(Url, UT)
+	end.
+
 %% Store resource path for response
 -spec store_resource_path(atom(), binary() | list()) -> 'ok'.
 store_resource_path(Project, Path) ->
@@ -137,6 +171,17 @@ handle_call({add_url_action, {Project, Url, Action, Opt}},
 			_From, State) ->
 	case ets:insert(url_cation, [{Project, [Action, {Url}]}]) of
 		true -> {reply, ok, State};
+		E -> {reply, E, State}
+	end;
+%% Handle http action
+handle_call({http_get, Path}, _From, State) ->
+	case check_project_url(Path) of
+		{ok, Project, Url} ->
+			
+			case find_url_content(Project, Path) of
+				{url_content_found, Content} -> {reply, Content, State};
+				E -> {reply, E, State}
+			end;
 		E -> {reply, E, State}
 	end.
 
