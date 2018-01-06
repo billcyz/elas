@@ -128,15 +128,19 @@ check_url_action(Project, Url) when is_list(Url) ->
 	check_url_action(return_action, Project, Url).
 
 check_url_action(Action, Project, Url) ->
+	UrlCollection = ets:lookup_element(url_action, Project, 2),
 	case Action of
-		return_action ->
-			UrlCollection = ets:lookup_element(url_action, Project, 2),
-			return_url_action(Url, UrlCollection);
-		_ -> 1
+		return_action -> return_url_action(Url, UrlCollection);
+		_ ->
+			A = return_url_action(Url, UrlCollection),
+			if
+				Action =:= A -> Action;
+				true -> {Url, action_not_match}
+			end
 	end.
 
 -spec return_url_action(list(), list()) -> atom().
-return_url_action(_Url, []) -> 1;
+return_url_action(Url, []) -> {Url, action_not_found};
 return_url_action(Url, UrlList) ->
 	[[A, {U}]|UT] = UrlList,
 	if
@@ -177,14 +181,19 @@ handle_call({add_url_action, {Project, Url, Action, Opt}},
 handle_call({http_get, Path}, _From, State) ->
 	case check_project_url(Path) of
 		{ok, Project, Url} ->
-			
-			case find_url_content(Project, Path) of
-				{url_content_found, Content} -> {reply, Content, State};
-				E -> {reply, E, State}
+			Action = check_url_action(Project, Url),
+			case Action of
+				'GET' -> 
+					case find_url_content(Project, Path) of
+						{url_content_found, Content} -> {reply, Content, State};
+						E -> {reply, E, State}
+					end;
+				_ -> {reply, {Url, action_not_permitted}, State}
 			end;
 		E -> {reply, E, State}
 	end.
 
+handle_info(_Request, State) -> {noreply, State}.
 
-
+handle_cast(_Request, State) -> {noreply, State}.
 
