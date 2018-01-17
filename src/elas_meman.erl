@@ -13,7 +13,6 @@
 		 store_resource_path/2]).
 
 
-
 %% Test export
 -export([]).
 
