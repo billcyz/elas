@@ -114,4 +114,9 @@ try_connect(Type, ConDst) when is_atom(ConDst) ->
 	end,
 	R.
 
+%% System test
+-spec system_test() -> 'ok'.
+system_test() ->
+	elas_test:start().
+
 

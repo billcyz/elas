@@ -10,9 +10,9 @@
 -export([init/1, handle_call/3, handle_cast/2, handle_info/2, terminate/2, code_change/3]).
 
 -export([start_link/0, start_link/1,
-		 add_project/2]).
+		 add_project/2, add_project_url/2]).
 
--record(state, {project}).
+-record(state, {service, service_port}).
 
 %% (bag) project -> Project
 %% (bag) project_url -> {project, [{url_01}, {url_02}]}
@@ -45,6 +45,11 @@ delete_project(Project, Option) ->
 clean_all_project() ->
 	gen_server:cast(?MODULE, clean_all_project),
 	1.
+
+%% Add project url
+-spec add_project_url(atom(), list()) -> 'ok'.
+add_project_url(Project, Url) ->
+	gen_server:call(?MODULE, {add_project_url, [Project, Url]}).
 
 %% Import response
 -spec import_response(atom(), list(), atom(), list()) -> 'ok'.
@@ -163,5 +168,7 @@ check_project_port(Project, Port) ->
 -spec find_project(atom()) -> atom() | false.
 find_project(Project) -> gen_server:call(elas_meman, {check_project, Project}).
 
-
+%% Get project port
+-spec get_service_port() -> integer().
+get_service_port() -> #state.service_port.
 
