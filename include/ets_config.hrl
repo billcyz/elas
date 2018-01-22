@@ -1,0 +1,4 @@
+-define(PROJECT_TABLE, project).
+-define(PROJECT_URL_TABLE, project_url).
+-define(PROJECT_URL_CONTENT_TABLE, url_content).
+-define(PROJECT_URL_ACTION_TABLE, url_action).
