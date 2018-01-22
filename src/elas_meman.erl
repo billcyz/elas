@@ -54,26 +54,26 @@ check_project_url(Url) ->
 %% Create ets table
 -spec create_table(atom(), list()) -> 'ok'.
 create_table(Tab, TabOption) ->
-  case check_table(Tab) of
-    undefined -> ets:new(Tab, TabOption);
-    _ -> {Tab, table_already_exists}
-  end.
+	case check_table(Tab) of
+		undefined -> ets:new(Tab, TabOption);
+		_ -> {Tab, table_already_exists}
+	end.
 
 %% Delete ets table
 -spec delete_table(atom()) -> 'ok'.
 delete_table(Tab) ->
-  case Tab of
-    all -> 1;
-    _ when is_atom(Tab) -> 2
-  end,
-  case check_table(Tab) of
-    undefined -> {Tab, table_undefined};
-    _ ->
-      case ets:delete(Tab) of
-        true -> ok;
-        E -> E
-      end
-  end.
+	case Tab of
+		all -> 1;
+		_ when is_atom(Tab) -> 2
+	end,
+	case check_table(Tab) of
+		undefined -> {Tab, table_undefined};
+		_ ->
+			case ets:delete(Tab) of
+				true -> ok;
+				E -> E
+			end
+	end.
 
 
 %% Check ets table info
