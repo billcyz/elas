@@ -15,6 +15,9 @@
 		 add_http_action/3, add_http_action/4,
 		 add_url_content/4, add_url_content/5]).
 
+-record(project_status, {project = "",
+						 status = ""}).
+
 %% --------------------------------------------------------
 
 %% Check project basic info
@@ -60,3 +63,17 @@ add_url_content(Project, Url, Action, Content) ->
 add_url_content(Node, Project, Url, Action, Content) ->
 	gen_server:call({elas_meman, Node}, 
 					{add_url_content, [Project, Url, Action, Content]}).
+
+%% Register project, and set the project status
+-spec register(atom()) -> 'ok'.
+register(Project) ->
+	R = #project_status{project = Project,
+						status = init},
+	R.
+
+%% Update status for project
+-spec update_project_status(atom(), atom()) -> 'ok'.
+update_project_status(Project, P_Status) ->
+	1.
+
+

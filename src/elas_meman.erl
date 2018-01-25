@@ -18,6 +18,8 @@
 
 -record(state, {project_sturcture}).
 
+-include("ets_config.hrl").
+
 %% Store project port relationship into map
 
 %% -----------------------------------------------------------------
@@ -83,6 +85,20 @@ check_table(Tab) ->
 		undefined -> undefined;
 		R -> R
 	end.
+
+%% Create new project
+-spec create_project(atom()) -> 'ok'.
+create_project(Project) ->
+	ets:insert(?PROJECT_TABLE, {Project}),
+	ok.
+
+%% Delete whole project
+%% need to block all traffic coming to this project (update status)
+-spec delete_project(atom()) -> 'ok'.
+delete_project(Project) ->
+	update_project_status(Project, delete),
+	
+	1.
 
 %% Find required info in ets table
 %% Find project
@@ -161,6 +177,15 @@ handle_call({check_project, Project}, _From, State) ->
 		true -> {reply, Project, State};
 		false -> {reply, false, State}
 	end;
+%% Create project
+handle_call({create_project, Project}, _From, State) ->
+	case check_project_info(Project) of
+		true -> {reply, {project_exists, Project}, State};
+		false ->
+			create_project(Project),
+			{reply, {project_created, Project}, State}
+	end;
+			
 %% Store url path to ets
 handle_call({store_path, Project, Path}, _From, S = #state{}) ->
 	case gen_server:call(?MODULE, {{check_project, Project}}) of
@@ -195,5 +220,8 @@ handle_call({http_get, Path}, _From, State) ->
 
 handle_info(_Request, State) -> {noreply, State}.
 
+handle_cast({delete_project, Project}, State) ->
+	
+	{noreply, State};
 handle_cast(_Request, State) -> {noreply, State}.
 
