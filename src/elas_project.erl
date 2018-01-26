@@ -7,7 +7,7 @@
 %% Send request to ETS owner
 
 -module(elas_project).
-
+-behaviour(gen_server).
 -export([check_project_info/1, check_project_info/2,
 		 create_new_project/1, create_new_project/2,
 		 delete_project/1, delete_project/2,
@@ -18,7 +18,16 @@
 -record(project_status, {project = "",
 						 status = ""}).
 
+-include("ets_config.hrl").
+
 %% --------------------------------------------------------
+
+start_link() ->
+	gen_server:start_link(?MODULE, ?MODULE, [], []).
+
+init([]) ->
+	ets:new(?PROJECT_STATUS_TABLE, [named_table, bag]),
+	{ok, ?PROJECT_STATUS_TABLE}.
 
 %% Check project basic info
 -spec check_project_info(atom()) -> true | false.
@@ -69,11 +78,21 @@ add_url_content(Node, Project, Url, Action, Content) ->
 register(Project) ->
 	R = #project_status{project = Project,
 						status = init},
-	R.
+	gen_server:call(?MODULE, {register_project, R}).
 
 %% Update status for project
 -spec update_project_status(atom(), atom()) -> 'ok'.
-update_project_status(Project, P_Status) ->
-	1.
+update_project_status(Project, NewStatus) ->
+	gen_server:call(?MODULE, {update_project_status, Project,
+							  NewStatus}).
 
+%% Handle status register
+handle_call({register_project, R}, _From, Table) ->
+	ets:insert(Table, R),
+	{reply, ok, Table}.
+%% Handle status update
+handle_call({update_project_status, Project, Status},
+			_From, Table) ->
+	R = ets:lookup(Table, project_status),
+	{reply, ok, Table}
 
