@@ -94,5 +94,5 @@ handle_call({register_project, R}, _From, Table) ->
 handle_call({update_project_status, Project, Status},
 			_From, Table) ->
 	R = ets:lookup(Table, project_status),
-	{reply, ok, Table}
+	{reply, ok, Table}.
 
